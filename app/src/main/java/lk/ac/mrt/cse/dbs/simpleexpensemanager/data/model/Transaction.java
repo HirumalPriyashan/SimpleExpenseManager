@@ -67,4 +67,14 @@ public class Transaction {
         this.expenseType = expenseType;
         this.amount = amount;
     }
+
+    @Override
+    public String toString() {
+        return "Transaction{" +
+                "date=" + date +
+                ", accountNo='" + accountNo + '\'' +
+                ", expenseType=" + expenseType +
+                ", amount=" + amount +
+                '}';
+    }
 }
