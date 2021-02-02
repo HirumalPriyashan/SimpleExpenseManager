@@ -27,7 +27,7 @@ public class PersistentTransactionDAO implements TransactionDAO {
     private final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
     public PersistentTransactionDAO(Context context) {
-        this.sqLiteDatabaseHandler = new SQLiteDatabaseHandler(context);
+        this.sqLiteDatabaseHandler = SQLiteDatabaseHandler.getInstance(context);
     }
 
     @Override
@@ -42,7 +42,6 @@ public class PersistentTransactionDAO implements TransactionDAO {
 
         // insert row
         sqLiteDatabase.insert(TABLE_NAME, null, values);
-        sqLiteDatabase.close();
     }
 
     @Override

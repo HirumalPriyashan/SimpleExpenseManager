@@ -23,7 +23,7 @@ public class PersistentAccountDAO implements AccountDAO {
     private final String KEY_BALANCE = "balance";
 
     public PersistentAccountDAO(Context context) {
-        this.sqLiteDatabaseHandler = new SQLiteDatabaseHandler(context);
+        this.sqLiteDatabaseHandler = SQLiteDatabaseHandler.getInstance(context);
     }
 
     @Override
@@ -83,37 +83,41 @@ public class PersistentAccountDAO implements AccountDAO {
             };
             String selection = KEY_ACCOUNT_NO + " = ?";
             String[] selectionArgs = { accountNo };
+
             Cursor cursor = sqLiteDatabase.query(TABLE_NAME,projection,selection,selectionArgs,null,null,null);
             cursor.moveToFirst();
+
             String account_No = cursor.getString(cursor.getColumnIndex(KEY_ACCOUNT_NO));
             String bankName = cursor.getString(cursor.getColumnIndex(KEY_BANK_NAME));
             String accountHolderName = cursor.getString(cursor.getColumnIndex(KEY_ACCOUNT_HOLDER_NAME));
             double balance = cursor.getDouble(cursor.getColumnIndex(KEY_BALANCE));
-            cursor.close();
+
             return new Account(account_No, bankName,accountHolderName,balance);
         }
         catch (Exception exception){
             String msg = "Account " + accountNo + " is invalid.";
             throw new InvalidAccountException(msg);
         }
-        finally {
-            sqLiteDatabase.close();
-        }
     }
 
     @Override
     public void addAccount(Account account) {
+        List<String> accountNos = this.getAccountNumbersList();
+        if ( accountNos.contains( account.getAccountNo() ) ){
+            System.out.println("Already created account with that id");
+            return;
+        }
+
         SQLiteDatabase sqLiteDatabase = sqLiteDatabaseHandler.getWritableDatabase();
 
         ContentValues values = new ContentValues();
         values.put(KEY_ACCOUNT_NO, account.getAccountNo());
         values.put(KEY_BANK_NAME, account.getBankName());
-        values.put(KEY_ACCOUNT_HOLDER_NAME,account.getAccountHolderName());
-        values.put(KEY_BALANCE,account.getBalance());
+        values.put(KEY_ACCOUNT_HOLDER_NAME, account.getAccountHolderName());
+        values.put(KEY_BALANCE, account.getBalance());
 
         // insert row
         sqLiteDatabase.insert(TABLE_NAME, null, values);
-        sqLiteDatabase.close();
     }
 
     @Override
@@ -129,9 +133,6 @@ public class PersistentAccountDAO implements AccountDAO {
             String msg = "Account " + accountNo + " is invalid.";
             throw new InvalidAccountException(msg);
         }
-        finally {
-            sqLiteDatabase.close();
-        }
     }
 
     @Override
@@ -139,7 +140,6 @@ public class PersistentAccountDAO implements AccountDAO {
         try {
             // get data for the relevant Account No
             Account account = this.getAccount(accountNo);
-            ContentValues values = new ContentValues();
             switch (expenseType) {
                 case EXPENSE:
                     account.setBalance(account.getBalance() - amount);
@@ -148,15 +148,14 @@ public class PersistentAccountDAO implements AccountDAO {
                     account.setBalance(account.getBalance() + amount);
                     break;
             }
-            values.put(KEY_ACCOUNT_NO, account.getAccountNo());
-            values.put(KEY_BANK_NAME, account.getBankName());
-            values.put(KEY_ACCOUNT_HOLDER_NAME, account.getAccountHolderName());
+            ContentValues values = new ContentValues();
             values.put(KEY_BALANCE, account.getBalance());
             String selection = KEY_ACCOUNT_NO + " = ?";
             String[] selectionArgs = { account.getAccountNo() };
+
             SQLiteDatabase sqLiteDatabase = sqLiteDatabaseHandler.getWritableDatabase();
+            // update database
             sqLiteDatabase.update(TABLE_NAME, values, selection, selectionArgs);
-            sqLiteDatabase.close();
         }
         catch (Exception exception){
             String msg = "Account " + accountNo + " is invalid.";

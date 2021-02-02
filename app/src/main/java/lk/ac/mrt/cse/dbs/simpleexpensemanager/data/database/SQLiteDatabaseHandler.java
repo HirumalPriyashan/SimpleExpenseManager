@@ -44,9 +44,18 @@ public class SQLiteDatabaseHandler extends SQLiteOpenHelper {
             + KEY_EXPENSE_TYPE + " == \"INCOME\")," + KEY_AMOUNT + " REAL NOT NULL," + " FOREIGN KEY " + "("
             + KEY_ACCOUNT_NO + ") REFERENCES " + TABLE_ACCOUNT + "(" + KEY_ACCOUNT_NO + ")" + ")" ;
 
+    private static SQLiteDatabaseHandler sqLiteDatabaseHandlerInstance = null;
 
-    public SQLiteDatabaseHandler(Context context) {
+    private SQLiteDatabaseHandler(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
+    }
+
+    public static synchronized SQLiteDatabaseHandler getInstance(Context context)
+    {
+        if (sqLiteDatabaseHandlerInstance == null){
+            sqLiteDatabaseHandlerInstance = new SQLiteDatabaseHandler(context);
+        }
+        return sqLiteDatabaseHandlerInstance;
     }
 
     @Override
